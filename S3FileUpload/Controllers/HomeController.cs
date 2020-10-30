@@ -78,7 +78,7 @@ namespace S3FileUpload.Controllers
                 var key = S3KeyGenerator.Create(model.file.FileName);
 
                 // Generate path to where file will be temporarily stored locally
-                string filePath = Path.Combine(_env.WebRootPath, UPLOAD_DIRECTORY, key);
+                string filePath = Path.Combine(Path.Combine(_env.WebRootPath, UPLOAD_DIRECTORY), key);
 
                 try
                 {
