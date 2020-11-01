@@ -77,24 +77,21 @@ namespace S3FileUpload.Controllers
                 // Generate a unique filename and key for the file
                 var key = S3KeyGenerator.Create(model.file.FileName);
 
-                // Generate path to where file will be temporarily stored locally
-                string filePath = Path.Combine(_env.WebRootPath, UPLOAD_DIRECTORY + "\\" + key);
-
                 try
                 {
-                    // Copy file to local storage
-                    using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+                    string presignedURL = null;
+                    using (Stream stream = model.file.OpenReadStream())
                     {
-                        await model.file.CopyToAsync(fileStream);
+                        // Upload file to S3 bucket and obtain presigned URL for the file
+                        if (null != (presignedURL = await S3Uploader.UploadFileAsync(stream, key, _s3BucketSettings)))
+                        {
+                            // Send email with URL to user
+                            await Mailer.Send(model.email, presignedURL, _sendGridSettings);
+                            return RedirectToAction("Success", "Home", new { presigned = presignedURL });
+                        }
                     }
 
-                    // Upload file to S3 bucket and obtain presigned URL for the file
-                    string presignedURL = await S3Uploader.UploadFileAsync(filePath, key, _s3BucketSettings);
-
-                    // Send email with URL to user
-                    await Mailer.Send(model.email, presignedURL, _sendGridSettings);
-
-                    return RedirectToAction("Success", "Home", new { presigned = presignedURL });
+                    return RedirectToAction("Error", new { message = "Unable to create pre-signed URL!" });
                 }
                 catch (AmazonS3Exception ex)
                 {
@@ -105,14 +102,6 @@ namespace S3FileUpload.Controllers
                 {
                     _logger.LogError("Unknown encountered on server: '{0}'", ex.Message);
                     return RedirectToAction("Error", new { message = ex.Message });
-                }
-                finally
-                {
-                    // 5. Delete file
-                    FileInfo fileInfo = null;
-                    if (null != filePath)
-                        if (null != (fileInfo = new FileInfo(filePath)))
-                            fileInfo.Delete();
                 }
             }
             return View(model);

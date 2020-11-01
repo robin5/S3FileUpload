@@ -33,6 +33,7 @@ using Amazon.S3.Transfer;
 using System;
 using System.Threading.Tasks;
 using Amazon.S3.Model;
+using System.IO;
 
 namespace S3FileUpload.Util
 {
@@ -47,11 +48,11 @@ namespace S3FileUpload.Util
         /// <param name="key">The name of the object created in the S3 bucket</param>
         /// <param name="filePath">The location of the object to be uploaded to S3</param>
         /// <returns>The presigned URL used to view the uploaded file</returns>
-        public static async Task<string> UploadFileAsync(string filePath, string key, IS3BucketSettings s3BucketSettings)
+        public static async Task<string> UploadFileAsync(Stream stream, string key, IS3BucketSettings s3BucketSettings)
         {
             IAmazonS3 s3Client = new AmazonS3Client(s3BucketSettings.BucketRegion);
             var fileTransferUtility = new TransferUtility(s3Client);
-            await fileTransferUtility.UploadAsync(filePath, s3BucketSettings.BucketName);
+            await fileTransferUtility.UploadAsync(stream, s3BucketSettings.BucketName, key);
 
             // Generate a pre-signed url for the file
             string presignedURL = s3Client.GetPreSignedURL(new GetPreSignedUrlRequest
