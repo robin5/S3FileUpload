@@ -48,9 +48,14 @@ namespace S3FileUpload.Util
         /// <param name="key">The name of the object created in the S3 bucket</param>
         /// <param name="filePath">The location of the object to be uploaded to S3</param>
         /// <returns>The presigned URL used to view the uploaded file</returns>
-        public static async Task<string> UploadFileAsync(Stream stream, string key, IS3BucketSettings s3BucketSettings)
+        public static async Task<string> UploadFileAsync(
+            Stream stream, 
+            string key, 
+            DateTime urlExpires, 
+            IS3BucketSettings s3BucketSettings)
         {
             IAmazonS3 s3Client = new AmazonS3Client(s3BucketSettings.BucketRegion);
+            Console.WriteLine(s3Client.Config);
             var fileTransferUtility = new TransferUtility(s3Client);
             await fileTransferUtility.UploadAsync(stream, s3BucketSettings.BucketName, key);
 
@@ -59,7 +64,7 @@ namespace S3FileUpload.Util
             {
                 BucketName = s3BucketSettings.BucketName,
                 Key = key,
-                Expires = DateTime.UtcNow.AddMinutes(5.0)
+                Expires = urlExpires
             });
 
             return presignedURL;

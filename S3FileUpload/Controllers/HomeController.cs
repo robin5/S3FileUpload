@@ -82,12 +82,14 @@ namespace S3FileUpload.Controllers
                     string presignedURL = null;
                     using (Stream stream = model.file.OpenReadStream())
                     {
+                        DateTime urlExpires = DateTime.UtcNow.AddMinutes(5.0);
                         // Upload file to S3 bucket and obtain presigned URL for the file
-                        if (null != (presignedURL = await S3Uploader.UploadFileAsync(stream, key, _s3BucketSettings)))
+                        if (null != (presignedURL = await S3Uploader.UploadFileAsync(stream, key, urlExpires, _s3BucketSettings)))
                         {
                             // Send email with URL to user
-                            await Mailer.Send(model.email, presignedURL, _sendGridSettings);
-                            return RedirectToAction("Success", "Home", new { presigned = presignedURL });
+                            await Mailer.Send(model.email, model.file.FileName, presignedURL, urlExpires, _sendGridSettings);
+                            return RedirectToAction("Success", "Home", 
+                                new { presigned = presignedURL, filename = model.file.FileName });
                         }
                     }
 

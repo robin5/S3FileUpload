@@ -40,14 +40,14 @@
     <h1 class="display-4">File upload successful!</h1>
     <p>@Html.ActionLink("Upload another file", "Index", "Home")</p>
     @{
-        Microsoft.Extensions.Primitives.StringValues queryVal;
+        Microsoft.Extensions.Primitives.StringValues presignedURL;
+        Microsoft.Extensions.Primitives.StringValues fileName;
 
-        if (Context.Request.Query.TryGetValue("presigned", out queryVal))
+        if (Context.Request.Query.TryGetValue("presigned", out presignedURL) &&
+            Context.Request.Query.TryGetValue("filename", out fileName))
         {
-            <a href=@queryVal>Presigned URL</a>
+            <a href=@presignedURL>@fileName</a>
         }
-        <br /><br /><p><a href="https://robin5.net">Robin5</a></p>
     }
-
 </div>
 

@@ -31,6 +31,7 @@
 using SendGrid;
 using SendGrid.Helpers.Mail;
 using System;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace S3FileUpload.Util
@@ -46,31 +47,57 @@ namespace S3FileUpload.Util
         /// Sends an email to the given email address
         /// </summary>
         /// <param name="emailAddress">Address to send email</param>
-        /// <param name="presigned">Pre-signed URL specified in email</param>
+        /// <param name="presignedURL">Pre-signed URL specified in email</param>
         /// <param name="sendGridSettings">SendGrid API settings</param>
         /// <returns></returns>
-        public static async Task Send(string emailAddress, string presigned, ISendGridSettings sendGridSettings)
+        public static async Task Send(
+            string emailAddress, 
+            string fileName, 
+            string presignedURL, 
+            DateTime urlExpires,
+            ISendGridSettings sendGridSettings)
         {
             var client = new SendGridClient(sendGridSettings.Key);
             var from = new EmailAddress(sendGridSettings.FromAddress, sendGridSettings.FromName);
-            var to = new EmailAddress(emailAddress, UTILITY_NAME);
+            var to = new EmailAddress(emailAddress, "User");
             var subject = EMAIL_SUBJECT;
-            var plainTextContent = presigned;
-            var htmlContent = HtmlContent(plainTextContent);
+            var plainTextContent = PlainTextContent(fileName, presignedURL, urlExpires);
+            var htmlContent = HtmlContent(fileName, presignedURL, urlExpires);
 
             var email = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
             var response = await client.SendEmailAsync(email);
             Console.WriteLine($"Response: {response.StatusCode}");
         }
         /// <summary>
-        /// Creates an HTML version of the passed in content
+        /// Creates the plain text version of the content
         /// </summary>
-        /// <param name="content"></param>
+        /// <param name="fileName">File that was uploaded to S3 bucket</param>
+        /// <param name="presignedURL">Presigned URL of file uploaded to S3 bucket</param>
         /// <returns></returns>
-        private static string HtmlContent(string content)
+        private static string PlainTextContent(string fileName, string presignedURL, DateTime urlExpires)
         {
-            // TODO: format email into an HTML document
-            return "<strong>" + content + "</strong>";
+            return (new StringBuilder("Here is the pre-signed URL for your file ")
+                .Append(fileName )
+                .Append(": \n" )
+                .Append(presignedURL)
+                .Append("\n\n(note: this URL expires at ")
+                .Append(urlExpires.ToString()).ToString());
+        }
+        /// <summary>
+        /// Creates the HTML version of the content
+        /// </summary>
+        /// <param name="fileName">File that was uploaded to S3 bucket</param>
+        /// <param name="presignedURL">Presigned URL of file uploaded to S3 bucket</param>
+        /// <returns></returns>
+        private static string HtmlContent(string fileName, string presignedURL, DateTime urlExpires)
+        {
+            return (new StringBuilder("<p>Here is the pre-signed URL: <a href=\"")
+                .Append(presignedURL)
+                .Append("\">")
+                .Append(fileName)
+                .Append("</a><br /><br /><em>(note: this URL expires at ")
+                .Append(urlExpires.ToString())
+                .Append(")</em></p>").ToString());
         }
     }
 }
