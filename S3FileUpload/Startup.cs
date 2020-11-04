@@ -34,6 +34,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using S3FileUpload.Services;
 
 namespace S3FileUpload
 {
@@ -56,7 +57,6 @@ namespace S3FileUpload
                     Configuration.GetValue<string>("S3Bucket:Name") ?? "",
                     RegionEndpoint.GetBySystemName(Configuration.GetValue<string>("S3Bucket:Region") ?? "us-west-2")
                 ));
-            // TODO: Validate bucket settings
 
             services.AddSingleton<ISendGridSettings>(x => new SendGridSettings
                 (
@@ -64,7 +64,10 @@ namespace S3FileUpload
                     Configuration.GetValue<string>("SendGrid:FromAddress") ?? "",
                     Configuration.GetValue<string>("SendGrid:FromName") ?? ""
                 ));
-            // TODO: Validate SendGrid settings
+
+            services.AddSingleton<IMailService, SendGridMailService>();
+
+            services.AddSingleton<IS3FileUploadService, S3FileUploadService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

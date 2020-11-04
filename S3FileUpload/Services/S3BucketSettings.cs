@@ -2,7 +2,7 @@
 // * Copyright (c) 2020 Robin Murray
 // **********************************************************************************
 // *
-// * File: SendGridSettings.cs
+// * File: S3BucketSettings
 // *
 // * Author: Robin Murray
 // *
@@ -28,23 +28,20 @@
 // * 
 // **********************************************************************************
 
-namespace S3FileUpload
+using Amazon;
+
+namespace S3FileUpload.Services
 {
-    public class SendGridSettings : ISendGridSettings
+    public class S3BucketSettings : IS3BucketSettings
     {
-        private readonly string _key;
-        private readonly string _fromAddress;
-        private readonly string _fromName;
-
-        public string Key { get { return _key; } }
-        public string FromAddress { get { return _fromAddress; } }
-        public string FromName { get { return _fromName; } }
-
-        public SendGridSettings(string key, string fromAddress, string fromName)
+        private readonly string _bucketName;
+        private readonly RegionEndpoint _bucketRegion;
+        public string BucketName { get { return _bucketName; } }
+        public RegionEndpoint BucketRegion { get { return _bucketRegion; } }
+        public S3BucketSettings(string bucketName, RegionEndpoint bucketRegion)
         {
-            _key = key;
-            _fromAddress = fromAddress;
-            _fromName = fromName;
+            _bucketName = bucketName;
+            _bucketRegion = bucketRegion;
         }
     }
 }

@@ -35,6 +35,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using S3FileUpload.Services;
 using S3FileUpload.Models;
 using S3FileUpload.Util;
 using Amazon.S3;
@@ -47,20 +48,20 @@ namespace S3FileUpload.Controllers
 
         private readonly ILogger<HomeController> _logger;
         private readonly IWebHostEnvironment _env;
-        private readonly IS3BucketSettings _s3BucketSettings;
-        private readonly ISendGridSettings _sendGridSettings;
+        private readonly IS3FileUploadService _s3FileUploadService;
+        private readonly IMailService _mailService;
 
         public HomeController(
             ILogger<HomeController> logger,
             IWebHostEnvironment env,
-            IS3BucketSettings s3BucketSettings,
-            ISendGridSettings sendGridSettings
+            IS3FileUploadService s3FileUploadService,
+            IMailService mailService
             )
         {
             _logger = logger;
             _env = env;
-            _s3BucketSettings = s3BucketSettings;
-            _sendGridSettings = sendGridSettings;
+            _s3FileUploadService = s3FileUploadService;
+            _mailService = mailService;
         }
 
         [HttpGet]
@@ -84,10 +85,10 @@ namespace S3FileUpload.Controllers
                     {
                         DateTime urlExpires = DateTime.UtcNow.AddMinutes(5.0);
                         // Upload file to S3 bucket and obtain presigned URL for the file
-                        if (null != (presignedURL = await S3Uploader.UploadFileAsync(stream, key, urlExpires, _s3BucketSettings)))
+                        if (null != (presignedURL = await _s3FileUploadService.UploadFileAsync(stream, key, urlExpires)))
                         {
                             // Send email with URL to user
-                            await Mailer.Send(model.email, model.file.FileName, presignedURL, urlExpires, _sendGridSettings);
+                            await _mailService.Send(model.email, model.file.FileName, presignedURL, urlExpires);
                             return RedirectToAction("Success", "Home", 
                                 new { presigned = presignedURL, filename = model.file.FileName });
                         }

@@ -2,7 +2,7 @@
 // * Copyright (c) 2020 Robin Murray
 // **********************************************************************************
 // *
-// * File: FormFileSizeAttribute.cs
+// * File: SendGridSettings.cs
 // *
 // * Author: Robin Murray
 // *
@@ -28,29 +28,23 @@
 // * 
 // **********************************************************************************
 
-using Microsoft.AspNetCore.Http;
-using System.ComponentModel.DataAnnotations;
-
-namespace S3FileUpload.Util
+namespace S3FileUpload.Services
 {
-    /// <summary>
-    /// This class validate that a file picked in a form is less than or equal to 10MB
-    /// </summary>
-    public class FormFileSizeAttribute : ValidationAttribute
+    public class SendGridSettings : ISendGridSettings
     {
-        /// <summary>
-        /// IsValid is true if the file specified is less than or equal to 10MB, false otherwise
-        /// </summary>
-        /// <param name="value">File to be validated</param>
-        /// <returns>true if the file specified is less than or equal to 10MB, false otherwise</returns>
-        public override bool IsValid(object value)
+        private readonly string _key;
+        private readonly string _fromAddress;
+        private readonly string _fromName;
+
+        public string Key { get { return _key; } }
+        public string FromAddress { get { return _fromAddress; } }
+        public string FromName { get { return _fromName; } }
+
+        public SendGridSettings(string key, string fromAddress, string fromName)
         {
-            IFormFile file = value as IFormFile;
-            if (null != file)
-            {
-                return (file.Length <= 10485760);
-            }
-            return false;
+            _key = key;
+            _fromAddress = fromAddress;
+            _fromName = fromName;
         }
     }
 }

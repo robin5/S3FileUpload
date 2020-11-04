@@ -2,7 +2,7 @@
 // * Copyright (c) 2020 Robin Murray
 // **********************************************************************************
 // *
-// * File: S3BucketSettings
+// * File: IMailService.cs
 // *
 // * Author: Robin Murray
 // *
@@ -28,20 +28,20 @@
 // * 
 // **********************************************************************************
 
-using Amazon;
+using System;
+using System.Threading.Tasks;
 
-namespace S3FileUpload
+namespace S3FileUpload.Services
 {
-    public class S3BucketSettings : IS3BucketSettings
+    public interface IMailService
     {
-        private readonly string _bucketName;
-        private readonly RegionEndpoint _bucketRegion;
-        public string BucketName { get { return _bucketName; } }
-        public RegionEndpoint BucketRegion { get { return _bucketRegion; } }
-        public S3BucketSettings(string bucketName, RegionEndpoint bucketRegion)
-        {
-            _bucketName = bucketName;
-            _bucketRegion = bucketRegion;
-        }
+        /// <summary>
+        /// Sends an email to the given email address
+        /// </summary>
+        /// <param name="emailAddress">Address to send email</param>
+        /// <param name="presignedURL">Pre-signed URL specified in email</param>
+        /// <param name="sendGridSettings">SendGrid API settings</param>
+        /// <returns></returns>
+        public Task Send(string emailAddress, string fileName, string presignedURL, DateTime urlExpires);
     }
 }

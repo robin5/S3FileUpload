@@ -2,7 +2,7 @@
 // * Copyright (c) 2020 Robin Murray
 // **********************************************************************************
 // *
-// * File: IS3BucketSettings.cs
+// * File: ISendGridSettings.cs
 // *
 // * Author: Robin Murray
 // *
@@ -28,13 +28,12 @@
 // * 
 // **********************************************************************************
 
-using Amazon;
-
-namespace S3FileUpload
+namespace S3FileUpload.Services
 {
-    public interface IS3BucketSettings
+    public interface ISendGridSettings
     {
-        public string BucketName { get; }
-        public RegionEndpoint BucketRegion { get; }
+        public string Key { get; }
+        public string FromAddress { get; }
+        public string FromName { get; }
     }
 }

@@ -2,7 +2,7 @@
 // * Copyright (c) 2020 Robin Murray
 // **********************************************************************************
 // *
-// * File: S3Uploader.cs
+// * File: IS3FileUploadService.cs
 // *
 // * Author: Robin Murray
 // *
@@ -28,46 +28,27 @@
 // * 
 // **********************************************************************************
 
-using Amazon.S3;
-using Amazon.S3.Transfer;
 using System;
 using System.Threading.Tasks;
-using Amazon.S3.Model;
 using System.IO;
 
-namespace S3FileUpload.Util
+namespace S3FileUpload.Services
 {
     /// <summary>
-    /// This class implements functionality to upload a file to an S3 bucket and return a presigned URL to that file
+    /// This interface defines functionality to upload a file to an S3 bucket and return a presigned URL to that file
     /// </summary>
-    public class S3Uploader
+    public interface IS3FileUploadService
     {
         /// <summary>
-        /// Use S3 client to upload file to s3 bucket
+        /// Uploads a file to the S3 bucket
         /// </summary>
-        /// <param name="key">The name of the object created in the S3 bucket</param>
-        /// <param name="filePath">The location of the object to be uploaded to S3</param>
-        /// <returns>The presigned URL used to view the uploaded file</returns>
-        public static async Task<string> UploadFileAsync(
-            Stream stream, 
-            string key, 
-            DateTime urlExpires, 
-            IS3BucketSettings s3BucketSettings)
-        {
-            IAmazonS3 s3Client = new AmazonS3Client(s3BucketSettings.BucketRegion);
-            Console.WriteLine(s3Client.Config);
-            var fileTransferUtility = new TransferUtility(s3Client);
-            await fileTransferUtility.UploadAsync(stream, s3BucketSettings.BucketName, key);
-
-            // Generate a pre-signed url for the file
-            string presignedURL = s3Client.GetPreSignedURL(new GetPreSignedUrlRequest
-            {
-                BucketName = s3BucketSettings.BucketName,
-                Key = key,
-                Expires = urlExpires
-            });
-
-            return presignedURL;
-        }
+        /// <param name="stream">file to upload to bucket</param>
+        /// <param name="key">A unique name for the file placed into the S3 bucket</param>
+        /// <param name="urlExpires">Expiration time for the pre-signed URL</param>
+        /// <returns></returns>
+        public Task<string> UploadFileAsync(
+            Stream stream,
+            string key,
+            DateTime urlExpires);
     }
 }

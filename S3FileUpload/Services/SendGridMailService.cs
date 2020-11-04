@@ -2,7 +2,7 @@
 // * Copyright (c) 2020 Robin Murray
 // **********************************************************************************
 // *
-// * File: Mailer.cs
+// * File: SendGridMailService.cs
 // *
 // * Author: Robin Murray
 // *
@@ -28,21 +28,26 @@
 // * 
 // **********************************************************************************
 
+using System;
+using System.Threading.Tasks;
 using SendGrid;
 using SendGrid.Helpers.Mail;
-using System;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace S3FileUpload.Util
+namespace S3FileUpload.Services
 {
     /// <summary>
     /// This class implements functionality to send a presigned URL to a given email address
     /// </summary>
-    public class Mailer
+    public class SendGridMailService : IMailService
     {
-        private const string UTILITY_NAME = "SAM File Upload Utility";
-        private const string EMAIL_SUBJECT = "SAM FileUpload Pre-signed Key";
+        private const string EMAIL_SUBJECT = "S3FileUpload Pre-signed Key";
+
+        private ISendGridSettings _settings;
+        public SendGridMailService(ISendGridSettings settings)
+        {
+            _settings = settings;
+        }
+
         /// <summary>
         /// Sends an email to the given email address
         /// </summary>
@@ -50,15 +55,14 @@ namespace S3FileUpload.Util
         /// <param name="presignedURL">Pre-signed URL specified in email</param>
         /// <param name="sendGridSettings">SendGrid API settings</param>
         /// <returns></returns>
-        public static async Task Send(
-            string emailAddress, 
-            string fileName, 
-            string presignedURL, 
-            DateTime urlExpires,
-            ISendGridSettings sendGridSettings)
+        public async Task Send(
+            string emailAddress,
+            string fileName,
+            string presignedURL,
+            DateTime urlExpires)
         {
-            var client = new SendGridClient(sendGridSettings.Key);
-            var from = new EmailAddress(sendGridSettings.FromAddress, sendGridSettings.FromName);
+            var client = new SendGridClient(_settings.Key);
+            var from = new EmailAddress(_settings.FromAddress, _settings.FromName);
             var to = new EmailAddress(emailAddress, "User");
             var subject = EMAIL_SUBJECT;
             var plainTextContent = PlainTextContent(fileName, presignedURL, urlExpires);
@@ -68,6 +72,7 @@ namespace S3FileUpload.Util
             var response = await client.SendEmailAsync(email);
             Console.WriteLine($"Response: {response.StatusCode}");
         }
+
         /// <summary>
         /// Creates the plain text version of the content
         /// </summary>
@@ -76,13 +81,9 @@ namespace S3FileUpload.Util
         /// <returns></returns>
         private static string PlainTextContent(string fileName, string presignedURL, DateTime urlExpires)
         {
-            return (new StringBuilder("Here is the pre-signed URL for your file ")
-                .Append(fileName )
-                .Append(": \n" )
-                .Append(presignedURL)
-                .Append("\n\n(note: this URL expires at ")
-                .Append(urlExpires.ToString()).ToString());
+            return $"Here is the pre-signed URL for your file {fileName}: \n\n{presignedURL}\n\n(note: this URL expires at {urlExpires.ToString()}";
         }
+
         /// <summary>
         /// Creates the HTML version of the content
         /// </summary>
@@ -91,13 +92,7 @@ namespace S3FileUpload.Util
         /// <returns></returns>
         private static string HtmlContent(string fileName, string presignedURL, DateTime urlExpires)
         {
-            return (new StringBuilder("<p>Here is the pre-signed URL: <a href=\"")
-                .Append(presignedURL)
-                .Append("\">")
-                .Append(fileName)
-                .Append("</a><br /><br /><em>(note: this URL expires at ")
-                .Append(urlExpires.ToString())
-                .Append(")</em></p>").ToString());
+            return $"<p>Here is the pre-signed URL: <a href=\"{presignedURL}\">{fileName}</a><br /><br /><em>(note: this URL expires at {urlExpires.ToString()})</em></p>";
         }
     }
 }

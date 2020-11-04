@@ -2,7 +2,7 @@
 // * Copyright (c) 2020 Robin Murray
 // **********************************************************************************
 // *
-// * File: FormFileSizeAttribute.cs
+// * File: S3FileUploadService.cs
 // *
 // * Author: Robin Murray
 // *
@@ -28,29 +28,51 @@
 // * 
 // **********************************************************************************
 
-using Microsoft.AspNetCore.Http;
-using System.ComponentModel.DataAnnotations;
+using Amazon.S3;
+using Amazon.S3.Transfer;
+using System;
+using System.Threading.Tasks;
+using Amazon.S3.Model;
+using System.IO;
 
-namespace S3FileUpload.Util
+namespace S3FileUpload.Services
 {
     /// <summary>
-    /// This class validate that a file picked in a form is less than or equal to 10MB
+    /// This class implements functionality to upload a file to an S3 bucket and return a presigned URL to that file
     /// </summary>
-    public class FormFileSizeAttribute : ValidationAttribute
+    public class S3FileUploadService : IS3FileUploadService
     {
-        /// <summary>
-        /// IsValid is true if the file specified is less than or equal to 10MB, false otherwise
-        /// </summary>
-        /// <param name="value">File to be validated</param>
-        /// <returns>true if the file specified is less than or equal to 10MB, false otherwise</returns>
-        public override bool IsValid(object value)
+        private IS3BucketSettings _s3BucketSettings;
+        public S3FileUploadService(IS3BucketSettings s3BucketSettings)
         {
-            IFormFile file = value as IFormFile;
-            if (null != file)
+            _s3BucketSettings = s3BucketSettings;
+        }
+        /// <summary>
+        /// Uploads a file to the S3 bucket
+        /// </summary>
+        /// <param name="stream">file to upload to bucket</param>
+        /// <param name="key">A unique name for the file placed into the S3 bucket</param>
+        /// <param name="urlExpires">Expiration time for the pre-signed URL</param>
+        /// <returns></returns>
+        public async Task<string> UploadFileAsync(
+            Stream stream,
+            string key,
+            DateTime urlExpires)
+        {
+            IAmazonS3 s3Client = new AmazonS3Client(_s3BucketSettings.BucketRegion);
+            Console.WriteLine(s3Client.Config);
+            var fileTransferUtility = new TransferUtility(s3Client);
+            await fileTransferUtility.UploadAsync(stream, _s3BucketSettings.BucketName, key);
+
+            // Generate a pre-signed url for the file
+            string presignedURL = s3Client.GetPreSignedURL(new GetPreSignedUrlRequest
             {
-                return (file.Length <= 10485760);
-            }
-            return false;
+                BucketName = _s3BucketSettings.BucketName,
+                Key = key,
+                Expires = urlExpires
+            });
+
+            return presignedURL;
         }
     }
 }
