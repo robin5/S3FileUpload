@@ -50,18 +50,21 @@ namespace S3FileUpload.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly IS3FileUploadService _s3FileUploadService;
         private readonly IMailService _mailService;
+        private readonly IMailSettings _mailSettings;
 
         public HomeController(
             ILogger<HomeController> logger,
             IWebHostEnvironment env,
             IS3FileUploadService s3FileUploadService,
-            IMailService mailService
+            IMailService mailService,
+            IMailSettings mailSettings
             )
         {
             _logger = logger;
             _env = env;
             _s3FileUploadService = s3FileUploadService;
             _mailService = mailService;
+            _mailSettings = mailSettings;
         }
 
         [HttpGet]
@@ -87,8 +90,16 @@ namespace S3FileUpload.Controllers
                         // Upload file to S3 bucket and obtain presigned URL for the file
                         if (null != (presignedURL = await _s3FileUploadService.UploadFileAsync(stream, key, urlExpires)))
                         {
+                            IMail mail = new Mail(
+                                _mailSettings,
+                                model.email,
+                                model.file.FileName,
+                                presignedURL,
+                                urlExpires);
+
                             // Send email with URL to user
-                            await _mailService.Send(model.email, model.file.FileName, presignedURL, urlExpires);
+                            await _mailService.Send(mail);
+
                             return RedirectToAction("Success", "Home", 
                                 new { presigned = presignedURL, filename = model.file.FileName });
                         }

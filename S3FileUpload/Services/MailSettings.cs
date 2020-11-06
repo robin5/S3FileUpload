@@ -30,13 +30,16 @@
 
 namespace S3FileUpload.Services
 {
-    public class SendGridSettings : ISendGridSettings
+    public class MailSettings : IMailSettings
     {
-        private readonly string _key;
-        public string Key { get { return _key; } }
-        public SendGridSettings(string key)
+        private readonly string _fromAddress;
+        private readonly string _fromName;
+        public string FromAddress { get { return _fromAddress; } }
+        public string FromName { get { return _fromName; } }
+        public MailSettings(string fromAddress, string fromName)
         {
-            _key = key;
+            _fromAddress = fromAddress;
+            _fromName = fromName;
         }
     }
 }

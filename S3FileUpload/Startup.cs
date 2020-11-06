@@ -60,9 +60,13 @@ namespace S3FileUpload
 
             services.AddSingleton<ISendGridSettings>(x => new SendGridSettings
                 (
-                    Configuration.GetValue<string>("SendGrid:Key") ?? "",
-                    Configuration.GetValue<string>("SendGrid:FromAddress") ?? "",
-                    Configuration.GetValue<string>("SendGrid:FromName") ?? ""
+                    Configuration.GetValue<string>("SendGrid:Key") ?? ""
+                ));
+
+            services.AddSingleton<IMailSettings>(x => new MailSettings
+                (
+                    Configuration.GetValue<string>("Mail:FromAddress") ?? "",
+                    Configuration.GetValue<string>("Mail:FromName") ?? ""
                 ));
 
             services.AddSingleton<IMailService, SendGridMailService>();

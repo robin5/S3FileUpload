@@ -51,48 +51,23 @@ namespace S3FileUpload.Services
         /// <summary>
         /// Sends an email to the given email address
         /// </summary>
-        /// <param name="emailAddress">Address to send email</param>
-        /// <param name="presignedURL">Pre-signed URL specified in email</param>
-        /// <param name="sendGridSettings">SendGrid API settings</param>
+        /// <param name="mail">email to send</param>
         /// <returns></returns>
-        public async Task Send(
-            string emailAddress,
-            string fileName,
-            string presignedURL,
-            DateTime urlExpires)
+        public async Task Send(IMail mail)
         {
             var client = new SendGridClient(_settings.Key);
-            var from = new EmailAddress(_settings.FromAddress, _settings.FromName);
-            var to = new EmailAddress(emailAddress, "User");
-            var subject = EMAIL_SUBJECT;
-            var plainTextContent = PlainTextContent(fileName, presignedURL, urlExpires);
-            var htmlContent = HtmlContent(fileName, presignedURL, urlExpires);
 
-            var email = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
+            var email = MailHelper.CreateSingleEmail(
+                new EmailAddress(mail.FromAddress, mail.FromName),
+                new EmailAddress(mail.ToAddress, mail.ToName),
+                mail.Subject, 
+                mail.PlainTextContent, 
+                mail.HtmlContent
+                );
+
             var response = await client.SendEmailAsync(email);
+
             Console.WriteLine($"Response: {response.StatusCode}");
-        }
-
-        /// <summary>
-        /// Creates the plain text version of the content
-        /// </summary>
-        /// <param name="fileName">File that was uploaded to S3 bucket</param>
-        /// <param name="presignedURL">Presigned URL of file uploaded to S3 bucket</param>
-        /// <returns></returns>
-        private static string PlainTextContent(string fileName, string presignedURL, DateTime urlExpires)
-        {
-            return $"Here is the pre-signed URL for your file {fileName}: \n\n{presignedURL}\n\n(note: this URL expires at {urlExpires.ToString()}";
-        }
-
-        /// <summary>
-        /// Creates the HTML version of the content
-        /// </summary>
-        /// <param name="fileName">File that was uploaded to S3 bucket</param>
-        /// <param name="presignedURL">Presigned URL of file uploaded to S3 bucket</param>
-        /// <returns></returns>
-        private static string HtmlContent(string fileName, string presignedURL, DateTime urlExpires)
-        {
-            return $"<p>Here is the pre-signed URL: <a href=\"{presignedURL}\">{fileName}</a><br /><br /><em>(note: this URL expires at {urlExpires.ToString()})</em></p>";
         }
     }
 }

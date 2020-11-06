@@ -38,10 +38,8 @@ namespace S3FileUpload.Services
         /// <summary>
         /// Sends an email to the given email address
         /// </summary>
-        /// <param name="emailAddress">Address to send email</param>
-        /// <param name="presignedURL">Pre-signed URL specified in email</param>
-        /// <param name="sendGridSettings">SendGrid API settings</param>
+        /// <param name="mail">email to send</param>
         /// <returns></returns>
-        public Task Send(string emailAddress, string fileName, string presignedURL, DateTime urlExpires);
+        public Task Send(IMail mail);
     }
 }

@@ -33,7 +33,5 @@ namespace S3FileUpload.Services
     public interface ISendGridSettings
     {
         public string Key { get; }
-        public string FromAddress { get; }
-        public string FromName { get; }
     }
 }

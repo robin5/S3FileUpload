@@ -2,7 +2,7 @@
 // * Copyright (c) 2020 Robin Murray
 // **********************************************************************************
 // *
-// * File: SendGridSettings.cs
+// * File: IMailSettings.cs
 // *
 // * Author: Robin Murray
 // *
@@ -30,13 +30,9 @@
 
 namespace S3FileUpload.Services
 {
-    public class SendGridSettings : ISendGridSettings
+    public interface IMailSettings
     {
-        private readonly string _key;
-        public string Key { get { return _key; } }
-        public SendGridSettings(string key)
-        {
-            _key = key;
-        }
+        public string FromAddress { get; }
+        public string FromName { get; }
     }
 }

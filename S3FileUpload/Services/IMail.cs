@@ -2,7 +2,7 @@
 // * Copyright (c) 2020 Robin Murray
 // **********************************************************************************
 // *
-// * File: SendGridSettings.cs
+// * File: IMail.cs
 // *
 // * Author: Robin Murray
 // *
@@ -27,16 +27,33 @@
 // *   THE SOFTWARE.
 // * 
 // **********************************************************************************
+using System;
 
 namespace S3FileUpload.Services
 {
-    public class SendGridSettings : ISendGridSettings
+    public interface IMail
     {
-        private readonly string _key;
-        public string Key { get { return _key; } }
-        public SendGridSettings(string key)
-        {
-            _key = key;
-        }
+        string FromAddress { get; }
+        string FromName { get; }
+        string ToAddress { get; }
+        string ToName { get; }
+        string Subject { get; }
+        string FileName { get; }
+        string PresignedURL { get; }
+        DateTime URLExpires { get; }
+        /// <summary>
+        /// Creates the plain text version of the content
+        /// </summary>
+        /// <param name="fileName">File that was uploaded to S3 bucket</param>
+        /// <param name="presignedURL">Presigned URL of file uploaded to S3 bucket</param>
+        /// <returns></returns>
+        string PlainTextContent { get; }
+        /// <summary>
+        /// Creates the HTML version of the content
+        /// </summary>
+        /// <param name="fileName">File that was uploaded to S3 bucket</param>
+        /// <param name="presignedURL">Presigned URL of file uploaded to S3 bucket</param>
+        /// <returns></returns>
+        string HtmlContent { get; }
     }
 }
