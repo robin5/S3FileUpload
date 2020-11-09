@@ -50,18 +50,21 @@ namespace S3FileUpload.Services
         /// <summary>
         /// Uploads a file to the S3 bucket
         /// </summary>
-        /// <param name="stream">file to upload to bucket</param>
-        /// <param name="key">A unique name for the file placed into the S3 bucket</param>
+        /// <param name="stream">File to upload to bucket</param>
+        /// <param name="fileName">Partial name of the file to be placed into the S3 bucket</param>
         /// <param name="urlExpires">Expiration time for the pre-signed URL</param>
         /// <returns></returns>
         public async Task<string> UploadFileAsync(
             Stream stream,
-            string key,
+            string fileName,
             DateTime urlExpires)
         {
             IAmazonS3 s3Client = new AmazonS3Client(_s3BucketSettings.BucketRegion);
-            Console.WriteLine(s3Client.Config);
             var fileTransferUtility = new TransferUtility(s3Client);
+
+            // Make a unique key to the file
+            string key = Guid.NewGuid().ToString() + "_" + fileName;
+
             await fileTransferUtility.UploadAsync(stream, _s3BucketSettings.BucketName, key);
 
             // Generate a pre-signed url for the file

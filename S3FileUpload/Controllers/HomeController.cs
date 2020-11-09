@@ -44,24 +44,21 @@ namespace S3FileUpload.Controllers
 {
     public class HomeController : Controller
     {
-        private const string UPLOAD_DIRECTORY = "upload";
+        private const double PRESIGNED_URL_EXPIRATION_MINUTES = 5.0;
 
         private readonly ILogger<HomeController> _logger;
-        private readonly IWebHostEnvironment _env;
         private readonly IS3FileUploadService _s3FileUploadService;
         private readonly IMailService _mailService;
         private readonly IMailSettings _mailSettings;
 
         public HomeController(
             ILogger<HomeController> logger,
-            IWebHostEnvironment env,
             IS3FileUploadService s3FileUploadService,
             IMailService mailService,
             IMailSettings mailSettings
             )
         {
             _logger = logger;
-            _env = env;
             _s3FileUploadService = s3FileUploadService;
             _mailService = mailService;
             _mailSettings = mailSettings;
@@ -78,18 +75,21 @@ namespace S3FileUpload.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Generate a unique filename and key for the file
-                var key = S3KeyGenerator.Create(model.file.FileName);
-
                 try
                 {
-                    string presignedURL = null;
                     using (Stream stream = model.file.OpenReadStream())
                     {
-                        DateTime urlExpires = DateTime.UtcNow.AddMinutes(5.0);
-                        // Upload file to S3 bucket and obtain presigned URL for the file
-                        if (null != (presignedURL = await _s3FileUploadService.UploadFileAsync(stream, key, urlExpires)))
+                        // Create expiration date and time for the presigned URL
+                        DateTime urlExpires = DateTime.UtcNow.AddMinutes(PRESIGNED_URL_EXPIRATION_MINUTES);
+
+                        // Upload file and get presigned URL
+                        string presignedURL = await _s3FileUploadService.UploadFileAsync(
+                            stream, model.file.FileName, urlExpires);
+
+                        // If presigned URL was generated, send email to user
+                        if (!string.IsNullOrEmpty(presignedURL))
                         {
+                            // Generate the email containing the presigned URL and expiration time
                             IMail mail = new Mail(
                                 _mailSettings,
                                 model.email,
@@ -97,9 +97,10 @@ namespace S3FileUpload.Controllers
                                 presignedURL,
                                 urlExpires);
 
-                            // Send email with URL to user
+                            // Send email to user
                             await _mailService.Send(mail);
 
+                            // Go to success page with presigned URL and filename of file
                             return RedirectToAction("Success", "Home", 
                                 new { presigned = presignedURL, filename = model.file.FileName });
                         }
